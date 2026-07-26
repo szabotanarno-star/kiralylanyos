@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SÓ-001 — Az elveszett gyűrű</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cavern-dark:#101d38;
+  --cavern:#182b4f;
+  --rock:#28406f;
+  --rock-light:#3f5c94;
+  --salt:#f3c3ae;
+  --salt-dim:#e2a68d;
+  --salt-glow:#f8ddd0;
+  --gold:#c9a24a;
+  --gold-soft:#e8cf94;
+  --gold-dim:#a9832f;
+  --garnet:#a83e28;
+  --garnet-light:#c1583c;
+  --teal:#8a331f;
+  --teal-light:#c1583c;
+  --ok:#c9a24a;
+  --bad:#a83e28;
+  --shadow:0 14px 40px rgba(5,8,12,.5);
+  --radius:4px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse at 15% -10%, rgba(201,162,74,.10), transparent 55%),
+    radial-gradient(ellipse at 90% 0%, rgba(168,62,40,.14), transparent 50%),
+    var(--cavern-dark);
+  color:var(--salt);
+  font-family:'EB Garamond', serif;
+  font-size:18px;
+  line-height:1.6;
+  min-height:100vh;
+}
+h1,h2,h3,h4{font-family:'Cinzel', serif; font-weight:600; margin:0 0 .45em; letter-spacing:.02em;}
+.eyebrow{font-family:'IBM Plex Mono',monospace; font-size:.66rem; letter-spacing:.18em; text-transform:uppercase; color:var(--gold-soft); opacity:.9;}
+a{color:var(--gold-soft);}
+button{font-family:'EB Garamond',serif; cursor:pointer;}
+.wrap{max-width:980px; margin:0 auto; padding:0 20px 90px;}
+::selection{background:var(--gold-dim); color:var(--cavern-dark);}
+
+/* ---------- CRYSTAL SIGNATURE ---------- */
+.crystal-field{position:relative; height:150px; overflow:hidden;}
+.crystal{position:absolute; background:linear-gradient(155deg, var(--salt-glow), var(--salt-dim) 60%, var(--rock-light)); opacity:.85;}
+.crystal.c1{width:90px; height:90px; top:10px; left:6%; clip-path:polygon(50% 0%,100% 38%,80% 100%,20% 100%,0% 38%); transform:rotate(-8deg);}
+.crystal.c2{width:60px; height:70px; top:40px; left:20%; clip-path:polygon(50% 0%,100% 30%,90% 100%,10% 100%,0% 30%); opacity:.55; transform:rotate(14deg);}
+.crystal.c3{width:120px; height:110px; top:-10px; right:4%; clip-path:polygon(50% 0%,95% 45%,70% 100%,30% 100%,5% 45%); transform:rotate(6deg);}
+.crystal.c4{width:70px; height:65px; top:55px; right:22%; clip-path:polygon(50% 0%,100% 35%,82% 100%,18% 100%,0% 35%); opacity:.5; transform:rotate(-16deg);}
+.ring-drop{position:absolute; top:8px; left:50%; transform:translateX(-50%); width:34px; height:34px;}
+.ring-drop svg{width:100%; height:100%; filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));}
+
+/* ---------- HEADER ---------- */
+header.top{
+  position:sticky; top:0; z-index:50;
+  background:linear-gradient(180deg, rgba(15,21,28,.97), rgba(15,21,28,.9));
+  border-bottom:1px solid rgba(201,162,74,.25);
+  backdrop-filter:blur(6px);
+}
+.header-inner{max-width:980px; margin:0 auto; padding:14px 20px 10px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;}
+.title-block h1{font-size:1.5rem; margin:0; color:var(--salt);}
+.title-block h1 .accent{color:var(--gold-soft);}
+.case-stamp{font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--gold-soft); border:1px solid rgba(201,162,74,.4); padding:3px 9px; border-radius:2px; letter-spacing:.08em;}
+.progress-line{height:3px; background:var(--rock); position:relative; overflow:hidden;}
+.progress-fill{height:100%; background:linear-gradient(90deg, var(--teal-light), var(--gold)); width:0%; transition:width .4s ease;}
+
+/* ---------- TABS ---------- */
+nav.tabs{display:flex; flex-wrap:wrap; gap:6px; padding:14px 0 8px;}
+nav.tabs button{
+  background:var(--rock); color:var(--salt-dim); border:1px solid rgba(255,255,255,.06);
+  padding:8px 14px; border-radius:3px; font-size:.86rem; letter-spacing:.02em; transition:all .15s;
+}
+nav.tabs button.active{background:var(--gold-dim); color:var(--cavern-dark); border-color:var(--gold); font-weight:600;}
+nav.tabs button:not(.active):hover{background:var(--rock-light);}
+nav.tabs button.locked{opacity:.45; cursor:not-allowed;}
+
+.panel{display:none; animation:fadein .35s ease;}
+.panel.active{display:block;}
+@keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+/* ---------- CARDS / SECTIONS ---------- */
+.card{
+  background:linear-gradient(160deg, rgba(255,255,255,.03), rgba(255,255,255,0)), var(--cavern);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  padding:22px 24px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+.card h2{font-size:1.25rem; color:var(--gold-soft); border-bottom:1px solid rgba(201,162,74,.25); padding-bottom:.35em;}
+.card h3{font-size:1.05rem; color:var(--salt);}
+.story-text p{margin:0 0 1em;}
+.story-text em{color:var(--gold-soft); font-style:italic;}
+.dropcap::first-letter{font-family:'Cinzel',serif; font-size:2.6em; float:left; line-height:.85; padding:.05em .12em 0 0; color:var(--gold);}
+
+.callout{border-left:3px solid var(--gold); background:rgba(201,162,74,.08); padding:12px 16px; border-radius:0 3px 3px 0; margin:14px 0; font-size:.95rem;}
+.callout.teal{border-color:var(--teal-light); background:rgba(63,125,120,.1);}
+.callout.garnet{border-color:var(--garnet-light); background:rgba(176,87,122,.1);}
+
+.role-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:10px;}
+.role-card{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:3px; padding:12px 14px;}
+.role-card .r-name{font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gold-soft);}
+
+/* ---------- CLUES ---------- */
+.clue-list{list-style:none; margin:0; padding:0; counter-reset:clue;}
+.clue-list li{counter-increment:clue; padding:9px 0 9px 2.2em; position:relative; border-bottom:1px solid rgba(255,255,255,.06); font-size:.98rem;}
+.clue-list li:last-child{border-bottom:none;}
+.clue-list li::before{
+  content:counter(clue); position:absolute; left:0; top:8px;
+  width:1.6em; height:1.6em; border-radius:50%; background:var(--rock); color:var(--gold-soft);
+  font-family:'IBM Plex Mono',monospace; font-size:.72rem; display:flex; align-items:center; justify-content:center;
+  border:1px solid rgba(201,162,74,.3);
+}
+.clue-filter{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+.clue-filter button{background:transparent; border:1px solid rgba(201,162,74,.35); color:var(--gold-soft); padding:5px 12px; border-radius:20px; font-size:.8rem;}
+.clue-filter button.active{background:var(--gold-dim); color:var(--cavern-dark);}
+.clue-marked{opacity:.4; text-decoration:line-through;}
+
+/* ---------- GRID ---------- */
+.grid-scroll{overflow-x:auto;}
+table.logic-grid{border-collapse:collapse; width:100%; min-width:720px; font-size:.88rem;}
+table.logic-grid th, table.logic-grid td{border:1px solid rgba(255,255,255,.1); padding:8px; vertical-align:top;}
+table.logic-grid thead th{background:var(--teal); color:var(--salt); font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; padding:10px 8px;}
+table.logic-grid td.rowname{background:rgba(255,255,255,.04); font-weight:600; color:var(--gold-soft); font-family:'Cinzel',serif; font-size:.95rem; white-space:nowrap;}
+table.logic-grid select{
+  width:100%; background:var(--cavern-dark); color:var(--salt); border:1px solid rgba(255,255,255,.15);
+  border-radius:3px; padding:7px 6px; font-family:'EB Garamond',serif; font-size:.88rem;
+}
+table.logic-grid select.correct{border-color:var(--ok); box-shadow:0 0 0 1px var(--ok) inset;}
+table.logic-grid select.wrong{border-color:var(--bad); box-shadow:0 0 0 1px var(--bad) inset;}
+
+.grid-controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px;}
+.btn{
+  background:var(--gold-dim); color:var(--cavern-dark); border:none; padding:10px 20px; border-radius:3px;
+  font-weight:600; font-size:.92rem; letter-spacing:.02em; transition:transform .1s, background .15s;
+}
+.btn:hover{background:var(--gold);}
+.btn:active{transform:scale(.97);}
+.btn.secondary{background:transparent; border:1px solid var(--gold-dim); color:var(--gold-soft);}
+.btn.secondary:hover{background:rgba(201,162,74,.12);}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.stat-line{font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--salt-dim);}
+.score-badge{font-family:'IBM Plex Mono',monospace; background:var(--rock); border:1px solid var(--gold-dim); color:var(--gold-soft); padding:4px 12px; border-radius:20px; font-size:.8rem;}
+
+/* ---------- REVEAL ---------- */
+.reveal-box{border:1px dashed rgba(201,162,74,.4); border-radius:3px; padding:18px; margin-top:16px;}
+.reveal-box.hidden{opacity:.35; pointer-events:none; filter:blur(2px);}
+.riddle-q{margin:14px 0;}
+.riddle-q label{display:block; font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--gold-soft); margin-bottom:6px; letter-spacing:.03em;}
+select.riddle-select, textarea, input[type=text]{
+  width:100%; background:var(--cavern-dark); color:var(--salt); border:1px solid rgba(255,255,255,.15);
+  border-radius:3px; padding:9px 10px; font-family:'EB Garamond',serif; font-size:.98rem;
+}
+textarea{min-height:90px; resize:vertical;}
+
+/* ---------- FORM ---------- */
+.field{margin-bottom:16px;}
+.field label{display:block; font-family:'IBM Plex Mono',monospace; font-size:.76rem; color:var(--gold-soft); margin-bottom:5px; letter-spacing:.03em; text-transform:uppercase;}
+
+footer{text-align:center; padding:26px 0 10px; font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--rock-light); border-top:1px solid rgba(255,255,255,.06); margin-top:10px;}
+
+.msg-banner{padding:10px 14px; border-radius:3px; font-size:.9rem; margin-top:10px; display:none;}
+.msg-banner.ok{background:rgba(201,162,74,.16); border:1px solid var(--ok); color:#f5e3b3; display:block;}
+.msg-banner.bad{background:rgba(168,62,40,.18); border:1px solid var(--bad); color:#f6d2c4; display:block;}
+
+@media(max-width:640px){
+  body{font-size:16.5px;}
+  .title-block h1{font-size:1.2rem;}
+  .crystal-field{height:100px;}
+}
+</style>
+</head>
+<body>
+
+<div class="crystal-field">
+  <div class="crystal c1"></div><div class="crystal c2"></div><div class="crystal c3"></div><div class="crystal c4"></div>
+  <div class="ring-drop"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="none" stroke="#c9a24a" stroke-width="10"/><circle cx="50" cy="30" r="9" fill="#e8cf94"/></svg></div>
+</div>
+
+<header class="top">
+  <div class="header-inner">
+    <div class="title-block">
+      <span class="eyebrow">Nyomozói Akták · Árpád-házi rejtélyek</span>
+      <h1>Az elveszett <span class="accent">gyűrű</span></h1>
+    </div>
+    <span class="case-stamp">ÜGYIRAT № SÓ-001</span>
+  </div>
+  <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+</header>
+
+<div class="wrap">
+
+<nav class="tabs" id="tabNav">
+  <button data-tab="intro" class="active">01 · A bánya</button>
+  <button data-tab="guide">02 · Útmutató</button>
+  <button data-tab="clues">03 · Nyomok</button>
+  <button data-tab="grid">04 · Nyomozati tábla</button>
+  <button data-tab="reveal" class="locked">05 · A gyűrű története</button>
+  <button data-tab="submit" class="locked">06 · Beküldés</button>
+  <button data-tab="creative">07 · Kreatív feladat</button>
+</nav>
+
+<!-- ============ 01 INTRO ============ -->
+<section class="panel active" id="panel-intro">
+  <div class="card story-text">
+    <h2>A bánya mélyén</h2>
+    <p class="dropcap">A királylány — atyja mellett állva — gyönyörködve nézte a csillogó, hófehér sótömböket, és eszébe jutottak alattvalói, akik csak sós forrásokból párologtatott, úgynevezett <em>főtt</em> sóval kénytelenek beérni. A király — teljesítve leánya kérését — neki ajándékozta a sóbányát, a leány pedig lehúzta ujjáról a jegygyűrűjét, és az akna birtokbavételének jeléül a mély aknába dobta.</p>
+    <p>Eltelt néhány év…</p>
+    <p>A bányászok megkezdték munkájukat a frissen megnyitott bányában, ahol még soha nem járt előttük senki. Egyikük hangosan felkiáltott: „Nem hiszek a szememnek. Gyertek gyorsan, nézzétek meg ezt a gyűrűt! Hogy kerülhetett ez ide?" De senki nem tudta a választ.</p>
+    <p>A gyűrű híre szerte az országban elterjedt, és a királyné figyelmét is felkeltette. Parancsot adott, hogy azonnal vigyék hozzá a különös tárgyat. Amikor meglátta, halkan felsikoltott: „Hiszen ez… az én gyűrűm. Hogyan lehet ez?"</p>
+    <div class="callout garnet">
+      <strong>A nyomozás tétje:</strong> Hol került elő a gyűrű, és ki volt az a királylány, akié volt? Az öt Árpád-házi hercegnő közül — Piroska, Erzsébet, Jolán, Margit és Kinga — csak egyvalaki lehet ő. De ahhoz, hogy biztosan rá tudj mutatni, előbb ki kell derítened mind az ötük sorsát: kik voltak a szüleik, kihez mentek férjhez, mivel írták be magukat a történelembe, és milyen gyermekük született (vagy miért nem született egy sem). Csak ha a teljes nyomozati tábla összeáll, tudod majd bizonyítani, ki volt a gyűrű gazdája — és ki volt „a másik kettő", akikről a legenda is szól.</div>
+    </div>
+  </div>
+  <div style="text-align:right;"><button class="btn" onclick="gotoTab('guide')">Tovább az útmutatóhoz →</button></div>
+</section>
+
+<!-- ============ 02 GUIDE ============ -->
+<section class="panel" id="panel-guide">
+  <div class="card">
+    <h2>Nyomozói útmutató</h2>
+    <h3>A feladat célja</h3>
+    <p>Öt Árpád-házi királylány sorsa keveredett össze az idők során. A 03. fülön 24 nyomot találsz — ezek segítségével, kizárásos alapon kell kitöltened a 04. fülön található nyomozati táblát: minden hercegnőhöz hozzá kell rendelned a szüleit, a házastársát, a híres tettét és a híres gyermekét. <strong>A táblát kizárólag a nyomok logikus összefésülésével lehet megoldani</strong> — próbálgatással is célba érhetsz, de a nyomozói pontszámod ezt „bünteti".</p>
+    <h3>Lépések</h3>
+    <ol style="padding-left:1.2em;">
+      <li>Olvassátok át figyelmesen mind a 24 nyomot — jelöljétek meg (a checkbox segítségével), amit már felhasználtatok.</li>
+      <li>Keressetek olyan nyomokat, amelyek <em>kizárnak</em> lehetőségeket (pl. „ketten IV. Béla gyermekei"), és olyanokat, amelyek <em>összekötnek</em> két tényt (pl. „a francia királyné anyja aragóniai királyné volt").</li>
+      <li>Töltsétek ki a táblát — egy-egy mező csak akkor helyes, ha minden nyommal összhangban van.</li>
+      <li>Ha a tábla teljes és helyes, feloldódik a gyűrű története: itt kell megválaszolnotok, ki volt a hercegnő, és kik voltak „a másik ketten".</li>
+      <li>Zárjátok le az ügyet a 06. fülön egy rövid beküldött összegzéssel.</li>
+    </ol>
+    <div class="callout">
+      <strong>Csapatmunka (2–3 fő):</strong> a nyomozás gyorsabb és alaposabb, ha szerepeket osztotok.
+    </div>
+    <div class="role-grid">
+      <div class="role-card"><div class="r-name">Vezető nyomozó</div>Összefogja a csapatot, dönt vitás kérdésekben, felelős a tábla véglegesítéséért.</div>
+      <div class="role-card"><div class="r-name">Forráselemző</div>Sorra veszi a nyomokat, és hangosan felolvassa, melyik mit zár ki vagy köt össze.</div>
+      <div class="role-card"><div class="r-name">Családfa-tartó</div>Papíron vagy fejben követi, ki kinek a gyermeke, testvére, házastársa.</div>
+      <div class="role-card"><div class="r-name">Jegyzőkönyvvezető</div>Rögzíti a végleges megoldást, és megírja a beküldendő összegzést.</div>
+    </div>
+  </div>
+  <div style="text-align:right;"><button class="btn" onclick="gotoTab('clues')">Tovább a nyomokhoz →</button></div>
+</section>
+
+<!-- ============ 03 CLUES ============ -->
+<section class="panel" id="panel-clues">
+  <div class="card">
+    <h2>A nyomozati akta nyomai</h2>
+    <p class="stat-line">Jelöld meg (☑) a nyomokat, amelyeket már beépítettetek a megoldásba — ez csak a ti áttekintéseteket segíti, a pontszámot nem érinti.</p>
+    <ul class="clue-list" id="clueList"></ul>
+  </div>
+  <div style="text-align:right;"><button class="btn" onclick="gotoTab('grid')">Tovább a nyomozati táblához →</button></div>
+</section>
+
+<!-- ============ 04 GRID ============ -->
+<section class="panel" id="panel-grid">
+  <div class="card">
+    <h2>Nyomozati tábla</h2>
+    <p>Válaszd ki minden hercegnő sorában a négy kategóriához illő, helyes választ. A legördülő listák tartalma kategóriánként össze van keverve — ugyanaz az öt lehetőség tartozik minden sorhoz, neked kell kitalálnod, melyik hova illik.</p>
+    <div class="grid-scroll">
+      <table class="logic-grid" id="logicGrid"></table>
+    </div>
+    <div class="grid-controls">
+      <button class="btn" onclick="checkGrid()">Ellenőrzés</button>
+      <button class="btn secondary" onclick="giveHint()">Segítséget kérek (nyom)</button>
+      <span class="score-badge">Pontszám: <span id="scoreVal">100</span></span>
+      <span class="stat-line">Próbálkozások: <span id="attemptCount">0</span> · Segítségek: <span id="hintCount">0</span></span>
+    </div>
+    <div class="msg-banner" id="gridMsg"></div>
+  </div>
+</section>
+
+<!-- ============ 05 REVEAL ============ -->
+<section class="panel" id="panel-reveal">
+  <div class="card">
+    <h2>A gyűrű története</h2>
+    <div class="reveal-box hidden" id="revealBox">
+      <p>A tábla összeállt. Most már bizonyítani tudjátok, kinek a gyűrűje bukkant elő a sómélyből, és kik voltak azok, akiket a legenda „a másik kettőként" említ — hiszen a szülők egyike volt az a király, aki a bányát ajándékba adta, másika pedig az a királyné, aki ráismert a gyűrűre.</p>
+      <div class="riddle-q">
+        <label>Ki volt a gyűrű gazdája — a bányát kapó királylány?</label>
+        <select class="riddle-select" id="riddlePrincess">
+          <option value="">— válassz —</option>
+        </select>
+      </div>
+      <div class="riddle-q">
+        <label>Ki volt „a másik kettő" — a bányát ajándékozó király és a gyűrűre ráismerő királyné?</label>
+        <select class="riddle-select" id="riddleFather" style="margin-bottom:8px;">
+          <option value="">— az apa / király —</option>
+        </select>
+        <select class="riddle-select" id="riddleMother">
+          <option value="">— az anya / királyné —</option>
+        </select>
+      </div>
+      <button class="btn" onclick="checkRiddle()">Megoldás beküldése</button>
+      <div class="msg-banner" id="riddleMsg"></div>
+      <div id="legendEnd" style="display:none; margin-top:16px;">
+        <div class="callout teal">
+          <strong>A monda vége:</strong> A wieliczkai sóbányát a legenda szerint Kinga hercegnő — IV. Béla és Laszkarisz Mária lánya — kapta ajándékba, és gyűrűje csodálatos módon a mélyben, a frissen megnyitott sótömbben bukkant elő. Kinga később V. (Szemérmes) Boleszláv krakkói fejedelem felesége lett; házasságukban mindketten szüzességi fogadalmat tettek. A wieliczkai bányát a néphagyomány mind a mai napig Kinga bányájának nevezi.
+        </div>
+        <div style="text-align:right; margin-top:10px;"><button class="btn" onclick="gotoTab('submit')">Tovább a beküldéshez →</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 06 SUBMIT ============ -->
+<section class="panel" id="panel-submit">
+  <div class="card">
+    <h2>Az ügy lezárása</h2>
+    <p>Válaszoljatok röviden az alábbi kérdésekre, majd küldjétek el a nyomozás összegzését.</p>
+    <div class="field">
+      <label>Csapat / név, osztály</label>
+      <input type="text" id="teamName" placeholder="pl. 10.B — Kovács Anna, Tóth Bence">
+    </div>
+    <div class="field">
+      <label>Melyik nyom vezetett a legbiztosabban a megoldáshoz?</label>
+      <textarea id="reflect1" placeholder="…"></textarea>
+    </div>
+    <div class="field">
+      <label>Mit gondoltok, miért pont a sóbányát választotta ajándékul a hercegnő — mit üzen ez a döntés?</label>
+      <textarea id="reflect2" placeholder="…"></textarea>
+    </div>
+    <div class="field">
+      <label>Mi lepett meg legjobban az öt hercegnő sorsában?</label>
+      <textarea id="reflect3" placeholder="…"></textarea>
+    </div>
+    <button class="btn" onclick="sendSubmission()">Beküldés e-mailben</button>
+    <div class="msg-banner" id="submitMsg"></div>
+  </div>
+</section>
+
+<!-- ============ 07 CREATIVE ============ -->
+<section class="panel" id="panel-creative">
+  <div class="card">
+    <h2>Kreatív feladat</h2>
+    <p>Válasszatok az alábbi három lehetőség közül egyet, és készítsétek el. A rajzot, illusztrációt vagy a legendatöredék szövegét adjátok le tanárotoknak (papíron vagy digitálisan), a rövid leírást pedig itt küldjétek be.</p>
+    <ul style="padding-left:1.2em;">
+      <li><strong>a) Képregény:</strong> válasszatok ki egyet az öt hercegnő közül, és jelenítsétek meg a történetét 4–6 kockában, választott technikával (toll- vagy ceruzarajz, esetleg digitális eszköz).</li>
+      <li><strong>b) Gesta- vagy legendatöredék:</strong> írjatok egy kb. 150–200 szavas, korhű hangvételű legendatöredéket az egyik hercegnőről.</li>
+      <li><strong>c) Illusztráció:</strong> készítsetek egy képet választott technikával az egyik hercegnő életének egy érdekes mozzanatáról.</li>
+    </ul>
+    <div class="field">
+      <label>Melyik feladatot (a, b vagy c) és melyik hercegnőt választottátok, és röviden miről szól az elkészült munkátok?</label>
+      <textarea id="creativeText" placeholder="…"></textarea>
+    </div>
+    <button class="btn" onclick="sendCreative()">Kreatív munka leírásának beküldése</button>
+    <div class="msg-banner" id="creativeMsg"></div>
+  </div>
+</section>
+
+<footer>© 1001 Történet — Szabó Márta · Nyomozói Akták sorozat · oktatási célra</footer>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const NAMES = ['Piroska','Erzsébet','Jolán','Margit','Kinga'];
+
+const ANSWER = {
+  parents: {
+    'Piroska':'Szent László és Adelhaid',
+    'Erzsébet':'II. András és Merániai Gertrúd',
+    'Jolán':'II. András és Courtenay Jolán',
+    'Margit':'IV. Béla és Laszkarisz Mária',
+    'Kinga':'IV. Béla és Laszkarisz Mária (II.)'
+  },
+  spouse: {
+    'Piroska':'Ióannész Komnénosz, bizánci császár',
+    'Erzsébet':'IV. (Kegyes) Lajos, türingiai tartománygróf',
+    'Jolán':'I. (Hódító) Jakab, Aragónia királya',
+    'Margit':'— nem ment férjhez, szerzetesnő lett',
+    'Kinga':'V. (Szemérmes) Boleszláv, krakkói fejedelem'
+  },
+  deed: {
+    'Piroska':'Kolostort és hozzá kapcsolódó 50 ágyas kórházat alapított',
+    'Erzsébet':'Férje halála után a ferences harmadrend szegényeinek gondozására szentelte életét',
+    'Jolán':'Versenyt futott egy közrendű lánnyal, aki győzött, és selymet, drága ajándékokat nyert',
+    'Margit':'Visszautasította a cseh és a lengyel király házassági ajánlatát, hű maradt esküjéhez',
+    'Kinga':'Létrehozta a wieliczkai sóbányát'
+  },
+  child: {
+    'Piroska':'Mánuel Komnénosz, bizánci császár',
+    'Erzsébet':'II. Hermann, türingiai őrgróf',
+    'Jolán':'Aragóniai Izabella, francia királyné — Szép Fülöp anyja',
+    'Margit':'— nem volt gyermeke',
+    'Kinga':'— nem volt gyermeke, férjével együtt szüzességi fogadalmat tett'
+  }
+};
+// Megjegyzés: Margit és Kinga szülő-szövege szándékosan azonos tartalmú (mindketten
+// IV. Béla és Laszkarisz Mária lányai) — a "(II.)" jelölés csak a legördülőben
+// biztosítja a két, tartalmilag egyező opció megkülönböztethetőségét.
+function cleanParents(v){return v.replace(' (II.)','');}
+
+const CATS = [
+  {key:'parents', label:'Szülei'},
+  {key:'spouse',  label:'Házastársa'},
+  {key:'deed',    label:'Híres tette'},
+  {key:'child',   label:'Híres gyermeke'}
+];
+
+const CLUES = [
+"Az öt hercegnő közül ketten IV. Béla gyermekei.",
+"Ketten II. András gyermekei.",
+"Négy hercegnő uralkodók felesége lett.",
+"Ketten közülük féltestvérek, és ketten közülük édestestvérek.",
+"Két hercegnőnek nem volt gyermeke.",
+"Piroska fia császár lett.",
+"Erzsébet és Jolán féltestvérek voltak.",
+"Két hercegnő édestestvér volt.",
+"IV. Béla két leánya szüzességi fogadalmat tett.",
+"Két királyné az elesettek önzetlen támogatásáról vált híressé.",
+"Francia rokoni szálai révén művelt és modern szemléletű volt, beszélt franciául, tudott sakkozni és ismerte a trubadúrlírát, kedvelte a versenyeket.",
+"Ketten közülük uralkodók szülőivé váltak: egyikük bizánci, másikuk német földön.",
+"A francia királyné anyja aragóniai királyné volt.",
+"Szent László leánya szeretettel gondoskodott a betegekről.",
+"Hermann egy híres francia király nagybátyja volt.",
+"Kinga Erdélyből hozatott sóbányászokat Lengyelországba.",
+"Ketten is beléptek egy-egy szerzetesrendbe: egyikük domonkos rendi apáca lett, másikuk a Ferences Harmadrend tagja lett.",
+"A legidősebb hercegnő a bizánci császár felesége volt.",
+"Erzsébet szemtanúja volt édesanyja meggyilkolásának.",
+"Hódító Jakab és Kegyes Lajos ugyanannak a magyar királynak a leányait vették feleségül.",
+"V. Boleszláv sógornője két ország uralkodóját is kikosarazta.",
+"Margitnak nem volt gyermeke.",
+"Piroska férje és fia is császár volt.",
+"Jolán férje részt vett a reconquistában, az Ibériai-félsziget visszahódításában."
+];
+
+/* ================= STATE ================= */
+let score = 100, attempts = 0, hints = 0;
+let gridSolved = false;
+
+/* ================= TABS ================= */
+function gotoTab(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('#tabNav button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===id);
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('#tabNav button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if(b.classList.contains('locked')) return;
+    gotoTab(b.dataset.tab);
+  });
+});
+function unlockTab(id){
+  const b = document.querySelector('#tabNav button[data-tab="'+id+'"]');
+  if(b) b.classList.remove('locked');
+}
+function updateProgress(){
+  let pct = 0;
+  if(gridSolved) pct = 60; else {
+    // partial credit based on filled cells
+  }
+  document.getElementById('progressFill').style.width = pct+'%';
+}
+
+/* ================= CLUES TAB ================= */
+function buildClues(){
+  const ul = document.getElementById('clueList');
+  ul.innerHTML = '';
+  CLUES.forEach((c,i)=>{
+    const li = document.createElement('li');
+    const label = document.createElement('label');
+    label.style.cssText = 'cursor:pointer; display:flex; gap:10px; align-items:flex-start;';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.style.marginTop = '5px';
+    cb.addEventListener('change', ()=> li.classList.toggle('clue-marked', cb.checked));
+    const span = document.createElement('span');
+    span.textContent = c;
+    label.appendChild(cb);
+    label.appendChild(span);
+    li.appendChild(label);
+    ul.appendChild(li);
+  });
+}
+
+/* ================= GRID TAB ================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+let shuffledOptions = {}; // per category, array of {name, text}
+
+function buildGrid(){
+  CATS.forEach(cat=>{
+    let opts = NAMES.map(n=>({name:n, text: ANSWER[cat.key][n]}));
+    opts = shuffle(opts);
+    shuffledOptions[cat.key] = opts;
+  });
+
+  const table = document.getElementById('logicGrid');
+  let html = '<thead><tr><th>Hercegnő</th>';
+  CATS.forEach(c=> html += '<th>'+c.label+'</th>');
+  html += '</tr></thead><tbody>';
+  NAMES.forEach(name=>{
+    html += '<tr><td class="rowname">'+name+'</td>';
+    CATS.forEach(cat=>{
+      html += '<td><select data-name="'+name+'" data-cat="'+cat.key+'"><option value="">— válassz —</option>';
+      shuffledOptions[cat.key].forEach(opt=>{
+        const val = opt.name; // stored value is the correct-owner name
+        const label = cat.key==='parents' ? cleanParents(opt.text) : opt.text;
+        html += '<option value="'+val+'">'+label+'</option>';
+      });
+      html += '</select></td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function checkGrid(){
+  const selects = document.querySelectorAll('#logicGrid select');
+  let allFilled = true, allCorrect = true;
+  selects.forEach(sel=>{
+    if(!sel.value){ allFilled = false; sel.classList.remove('correct','wrong'); return; }
+    const correct = sel.value === sel.dataset.name;
+    sel.classList.toggle('correct', correct);
+    sel.classList.toggle('wrong', !correct);
+    if(!correct) allCorrect = false;
+  });
+  const msg = document.getElementById('gridMsg');
+  if(!allFilled){
+    msg.className = 'msg-banner bad';
+    msg.textContent = 'Még nincs minden mező kitöltve.';
+    return;
+  }
+  attempts++;
+  if(attempts>1){ score = Math.max(10, score-15); }
+  document.getElementById('attemptCount').textContent = attempts;
+  document.getElementById('scoreVal').textContent = score;
+
+  if(allCorrect){
+    msg.className = 'msg-banner ok';
+    msg.textContent = 'Az ügyirat lezárva — a tábla teljesen helyes! A gyűrű története feloldódott az 05. fülön.';
+    gridSolved = true;
+    unlockTab('reveal');
+    buildRiddleOptions();
+    document.getElementById('revealBox').classList.remove('hidden');
+    document.getElementById('progressFill').style.width = '65%';
+  } else {
+    msg.className = 'msg-banner bad';
+    msg.textContent = 'Van még hibás mező (piros keret) — nézzétek át a nyomokat újra.';
+  }
+}
+
+function giveHint(){
+  const selects = Array.from(document.querySelectorAll('#logicGrid select'));
+  const wrongOrEmpty = selects.filter(s=> s.value !== s.dataset.name);
+  if(wrongOrEmpty.length===0){
+    const msg = document.getElementById('gridMsg');
+    msg.className = 'msg-banner ok';
+    msg.textContent = 'Minden eddig kitöltött mező helyes — nincs mit javítani!';
+    return;
+  }
+  const pick = wrongOrEmpty[Math.floor(Math.random()*wrongOrEmpty.length)];
+  pick.value = pick.dataset.name;
+  pick.classList.add('correct');
+  pick.classList.remove('wrong');
+  hints++;
+  score = Math.max(10, score-10);
+  document.getElementById('hintCount').textContent = hints;
+  document.getElementById('scoreVal').textContent = score;
+}
+
+/* ================= REVEAL TAB ================= */
+function buildRiddleOptions(){
+  const pSel = document.getElementById('riddlePrincess');
+  const fSel = document.getElementById('riddleFather');
+  const mSel = document.getElementById('riddleMother');
+  NAMES.forEach(n=>{
+    const o = document.createElement('option'); o.value=n; o.textContent=n; pSel.appendChild(o);
+  });
+  ['IV. Béla','II. András','Szent László','V. Boleszláv','Ióannész Komnénosz'].forEach(n=>{
+    const o = document.createElement('option'); o.value=n; o.textContent=n; fSel.appendChild(o);
+  });
+  ['Laszkarisz Mária','Merániai Gertrúd','Courtenay Jolán','Adelhaid'].forEach(n=>{
+    const o = document.createElement('option'); o.value=n; o.textContent=n; mSel.appendChild(o);
+  });
+}
+function checkRiddle(){
+  const p = document.getElementById('riddlePrincess').value;
+  const f = document.getElementById('riddleFather').value;
+  const m = document.getElementById('riddleMother').value;
+  const msg = document.getElementById('riddleMsg');
+  if(!p || !f || !m){
+    msg.className = 'msg-banner bad'; msg.textContent = 'Válaszolj mindhárom kérdésre!'; return;
+  }
+  if(p==='Kinga' && f==='IV. Béla' && m==='Laszkarisz Mária'){
+    msg.className='msg-banner ok'; msg.textContent='Pontos megoldás! Az ügy lezárva.';
+    document.getElementById('legendEnd').style.display='block';
+    unlockTab('submit');
+    document.getElementById('progressFill').style.width='100%';
+  } else {
+    msg.className='msg-banner bad'; msg.textContent='Ez még nem pontos — nézzétek át a Szülei oszlopot Kinga sorában.';
+  }
+}
+
+/* ================= SUBMIT / CREATIVE ================= */
+function sendSubmission(){
+  const team = document.getElementById('teamName').value.trim();
+  const r1 = document.getElementById('reflect1').value.trim();
+  const r2 = document.getElementById('reflect2').value.trim();
+  const r3 = document.getElementById('reflect3').value.trim();
+  const msg = document.getElementById('submitMsg');
+  if(!team || !r1 || !r2 || !r3){
+    msg.className='msg-banner bad'; msg.textContent='Kérlek, tölts ki minden mezőt a beküldés előtt.'; return;
+  }
+  const body = encodeURIComponent(
+    'Csapat/név: '+team+'\n'+
+    'Pontszám: '+score+' (próbálkozások: '+attempts+', segítségek: '+hints+')\n\n'+
+    '1) Legbiztosabb nyom: '+r1+'\n\n'+
+    '2) A sóbánya-ajándék üzenete: '+r2+'\n\n'+
+    '3) Ami a legjobban meglepett: '+r3
+  );
+  window.location.href = 'mailto:szabotanarno@gmail.com?subject=' + encodeURIComponent('Az elveszett gyűrű – nyomozás beküldése – '+team) + '&body=' + body;
+  msg.className='msg-banner ok'; msg.textContent='A levelezőprogramod megnyílt az összegzéssel — küldd el a beküldéshez!';
+}
+function sendCreative(){
+  const txt = document.getElementById('creativeText').value.trim();
+  const msg = document.getElementById('creativeMsg');
+  if(!txt){ msg.className='msg-banner bad'; msg.textContent='Írd le pár mondatban a munkátokat a beküldés előtt.'; return; }
+  const body = encodeURIComponent('Kreatív feladat leírása:\n\n'+txt);
+  window.location.href = 'mailto:szabotanarno@gmail.com?subject=' + encodeURIComponent('Az elveszett gyűrű – kreatív feladat') + '&body=' + body;
+  msg.className='msg-banner ok'; msg.textContent='A levelezőprogramod megnyílt — küldd el a beküldéshez!';
+}
+
+/* ================= INIT ================= */
+buildClues();
+buildGrid();
+</script>
+</body>
+</html>
